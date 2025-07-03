@@ -23,11 +23,35 @@ import java.util.Scanner;
 
 public class theWheelSequel
 {
-    // Our main driver method, gonna call from the helper file and everything else   
+    //                          ----------------------------- Driver / Main Method -----------------------------
     public static void main(String[] args)
     {
+        // Object Declaration
         Scanner input = new Scanner(System.in);
-
-        twsSpinner.helperDriver(input);
+        
+        // Variable Declaration
+        boolean onStateMainMenu = true;
+        String currentInput = "";
+        
+        // Main Menu Loop
+        while(onStateMainMenu == true)
+        {
+            System.out.println("\n\n\n\n\n\n\nTHE WHEEL SEQUEL \n\nType a letter or input: \na. Spin \nb. Settings \nc. Exit\n");
+            currentInput = input.nextLine();
+            
+            if(currentInput.equalsIgnoreCase("Spin") == true || currentInput.equalsIgnoreCase("a") == true)
+            {
+                twsSpinner.spinDriver(input);
+            }
+            else if(currentInput.equalsIgnoreCase("Settings") == true || currentInput.equalsIgnoreCase("b") == true)
+            {
+                twsSettings.settingsDriver(input, currentInput);
+            }
+            else if(currentInput.equalsIgnoreCase("Exit") == true || currentInput.equalsIgnoreCase("c") == true)
+            {
+                onStateMainMenu = false;
+                System.out.println("Cya");
+            }
+        }
     }
 }

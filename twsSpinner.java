@@ -1,4 +1,4 @@
-// This helper file is the main function by choosing players, then spinning the wheel between chosen
+// This helper file is the main function for choosing players, then spinning the wheel between chosen
 
 import java.io.File;
 import java.util.ArrayList;
@@ -12,8 +12,13 @@ public class twsSpinner
     /*                          ----------------------------- Driver / Main Method -----------------------------
      *                                  The Central Control Module; AKA the one that tells stuff to do things
      */
-    public static void helperDriver(Scanner input)
+    public static void spinDriver(Scanner input)
     {           
+        // ----- Segment 0: Loading Settings ------
+        ArrayList<String> settingsList = new ArrayList<>();
+        File settingsLocation = new File("settings//generalSettings.txt");
+        settingsList = twsTools.getFileArrayList(settingsList, settingsLocation);
+        
         // ----- Segment 1: Getting Desired Players to Compare ------
         
         // Get the File Paths for Reference | See getFilePaths method for more documentation
@@ -22,33 +27,49 @@ public class twsSpinner
         filePathsList = twsTools.getFileArrayList(filePathsList, filePaths);
         
         // Gather chosen players from user to compare
-        System.out.println("Player Files Found: ");
-        printPlayerList(filePathsList);
+        System.out.println("\n\n\n\n"); // First time only to separate main menu from command window; might wanna rework the UI of the command window so it works the same as main
         getCommandList();
         ArrayList<Integer> playerList = new ArrayList<>();
         playerList = summonPlayerPickerUI(playerList, filePathsList, input);
                 
         // ----- Segment 2: Finding Common Games + Spinning -----
-                
+        
+        // Segment 2 variables
+        boolean commonGameSearchOnState = true;
+        String currentInput = ""; // This is used a lot throughout the program so I might make a universal "current input" string variable but that req a rewrite of a lot of stuff        
+        
         // Get an ArrayList of Every Common Game
-        System.out.println("Finding Common Games...");
+        System.out.println("\nFinding Common Games...");
         ArrayList<String> commonGames = new ArrayList<>();
         commonGames = getCommonGames(commonGames, playerList, filePathsList);
-
+        
         // Decision Matrix Dependent on result of getCommonGames (Whether or not there are games or not)
         if(commonGames.size() == 1)
         {
             System.out.println("1 game found: " + commonGames);
+            if(twsTools.askYesOrNoMasterTerminal(input, 1) == false)
+            {
+                System.exit(0);
+            }
         }
         else if(commonGames.isEmpty() != true)
         {
             System.out.println("Common Games Found! " + commonGames);
-            goSpinTheWheel(input, commonGames);
+            
+            while(commonGameSearchOnState == true)
+            {
+                goSpinTheWheel(input, commonGames, settingsList);
+                commonGameSearchOnState = twsTools.askYesOrNoMasterTerminal(input, 0);
+            }
         }
         else
         {
             System.out.println("No games found :(");
-        }
+            if(twsTools.askYesOrNoMasterTerminal(input, 1) == false)
+            {
+                System.exit(0);
+            }
+        }            
         
         return;
     }
@@ -141,8 +162,8 @@ public class twsSpinner
             }
             else if(currentInput.equalsIgnoreCase("exit") == true || currentInput.equalsIgnoreCase("f") == true)
             {
-                System.out.println("There will eventually be a menu to return to, but for now bye bye");
-                System.exit(1); // bye bye
+                playerList.clear();
+                return playerList;
             }
             else if(currentInput.equalsIgnoreCase("help") == true || currentInput.equalsIgnoreCase("g") == true)
             {
@@ -200,51 +221,38 @@ public class twsSpinner
     } 
     
     /*                          ----------------------------- Wheel Spinning + Flavor Text -----------------------------
-     *                                          A prompt to pause and let the user decide if they want to
-     *                                          activate the wheel + some flavor text for spice
-     */
-    public static void goSpinTheWheel(Scanner input, ArrayList<String> commonGames)
+     *                                          The main random wheel spinning module + some flavor text 
+     *                                          for spice
+     */    
+    public static void goSpinTheWheel(Scanner input, ArrayList<String> commonGames, ArrayList<String> settingsList)
     {
         // Object Declaration
         Random rand = new Random();
         
         // Variable Declaration
-        String currentInput = "";
         int currentNum = 0; 
-        int passCondition = -1;
-        
-        // Confirmation Prompt
-        System.out.println("\nSpin The Wheel?");
-        
-        while(passCondition == -1) // This decision block is determined by the isYesOrNo tool: For documentation on how to use its -1, 0, 1 index refer to method header
-        {
-            currentInput = input.nextLine();
-        
-            if(twsTools.isYesOrNo(currentInput) == 1)
-            {
-                passCondition = 1;
-            }
-            else if(twsTools.isYesOrNo(currentInput) == 0)
-            {
-                System.out.println("Cya");
-                System.exit(1); // Another case of there not being a menu
-            }
-            else
-            {
-                System.out.println("Invalid Input; Only type a Yes/No response.");
-            }
-        }
-        
+                
         // Flavor Text
-        for(int i = 0; i < 50; i++)
+        if(settingsList.get(0).equals("flavorText=Enabled") == true) // Account for adjusted settings
         {
-            currentNum = rand.nextInt(commonGames.size());
-            System.out.println(commonGames.get(currentNum));
+            for(int i = 1; i <= 1024; i = i * 2)
+            {
+                twsTools.pauseTimer(i);
+                currentNum = rand.nextInt(commonGames.size());
+                System.out.println(commonGames.get(currentNum));
+            }
+            
+            twsTools.pauseTimer(1000);
+    
+            for(int i = 0; i < 3; i++)
+            {
+                System.out.println(".");
+                twsTools.pauseTimer(650);
+            }
         }
-        
-        for(int i = 0; i < 3; i++)
+        else
         {
-            System.out.println(".");
+            System.out.print("\n");
         }
         
         // Final Output
@@ -265,6 +273,6 @@ public class twsSpinner
      */     
     public static void getCommandList()
     {
-        System.out.println("\nCommands Available: \na. Type a number to add a player to the game pool \nb. Type \"clear\" to clear the current player pool \nc. Type \"confirm\" to confirm selection \nd. Type \"current\" to see the current player pool \ne. Type \"list\" to see the list of found players \nf. Type \"exit\" to return to the main menu (as of typing this there is no main menu it'll just boot you lmfao) \ng. Type \"help\" to see these commands again");
+        System.out.println("Commands Available: \na. Type a number to add a player to the game pool \nb. Type \"clear\" to clear the current player pool \nc. Type \"confirm\" to confirm selection \nd. Type \"current\" to see the current player pool \ne. Type \"list\" to see the list of found players \nf. Type \"exit\" to return to the main menu \ng. Type \"help\" to see these commands again");
     }
 }

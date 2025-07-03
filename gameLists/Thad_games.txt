@@ -1,4 +1,3 @@
-Apex
 Aimlabs
 BTD6
 ContentWarning
